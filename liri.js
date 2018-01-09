@@ -9,27 +9,29 @@ let command = process.argv[2];
 let secCommand = process.argv[3];
 
 //determines which command to execute;
-if(command == "my-tweets"){
-	getTweets();
-}else if(command == "spotify-this-song"){
-	getSong();
-}else if(command == "movie-this"){
-	getMovie();
-}else if(command == "do-what-it-says"){
-	console.log("Executing: Do What it Says")
-}else{
-	console.log("Try one of these commands:");
-	console.log('A) "my-tweets"');
-	console.log('B) "spotify-this-song" along with a song within quotations');
-	console.log('C) "movie-this"');
-	console.log('D) "do-what-it-says"');
-};
-
+function initialize(command){
+	if(command == "my-tweets"){
+		getTweets();
+	}else if(command == "spotify-this-song"){
+		getSong();
+	}else if(command == "movie-this"){
+		getMovie();
+	}else if(command == "do-what-it-says"){
+		doWhatever();
+	}else{
+		console.log("Try one of these commands:");
+		console.log('A) "my-tweets"');
+		console.log('B) "spotify-this-song" along with a song within quotations');
+		console.log('C) "movie-this"');
+		console.log('D) "do-what-it-says"');
+	};
+}
 
 //define function to return tweets
 function getTweets(){
 	//lets user know function is running
 	console.log("Executing: Retrieve Tweets");
+	console.log("==========================");
 
 	//retrieves keys and tokens from keys.js
 	let client = new Twitter({
@@ -58,6 +60,7 @@ function getSong(){
 
 	//lets user know function is running
 	console.log("Executing: Spotify");
+	console.log("=================");
 
 	let spotify = new Spotify({
 		id: keys.spotifyKeys.client_id,
@@ -66,6 +69,7 @@ function getSong(){
 
 	let track = secCommand;
 
+	//sets a default if song is not specified
 	if(track == undefined){
 		track = "The Sign Ace of Base"
 	}
@@ -83,7 +87,6 @@ function getSong(){
     let result = data.tracks.items[0];
 
     console.log("Artist: " + result.artists[0].name);
-
     console.log("Track Title: " + result.name);
 
     if(result.preview_url === null){
@@ -101,5 +104,56 @@ function getSong(){
 function getMovie(){
 
 	//lets user know function is running
-	console.log("Executing: Movies")
+	console.log("Executing: Movies");
+	console.log("=================");
+
+	let titleSearch = secCommand;
+
+	//sets a default if movie is not specified
+	if (titleSearch == null){
+		titleSearch = "Mr. Nobody"
+	};
+
+	//API request
+	request("http://www.omdbapi.com/?apikey=" + keys.omdbKeys.token + "&t=" + titleSearch + "&y=&plot=short&r=json", function(error, response, body) {
+	  if (!error && response.statusCode === 200) {
+	  	
+	  	let result = JSON.parse(body);
+
+	    console.log("Title: " + result.Title);
+	    console.log("Year: " + result.Year);
+	    console.log("IMDB rating: " + result.imdbRating);
+	    console.log("Country of origin: " + result.Country);
+	    console.log("Language: " + result.Language);
+	    console.log("Short Plot: " + result.Plot);
+	    console.log("Major Actor(s): " + result.Actors);
+	  }else{
+	  	console.log(error);
+	  }
+	});
+};
+
+//reads random.txt to see which function to execute
+function doWhatever(){
+
+	console.log("Executing: Reading Random.txt");
+	console.log("==========================");
+
+	fs.readFile("random.txt", "utf8", function(error, data) {
+		if(error){
+			return console.log(error);
+		}
+		//splits text into an array
+		let dataArr = data.split(",");
+
+		//sets secondary command	
+		secCommand = dataArr[1];
+
+		//calls initialize function
+  	initialize(dataArr[0]);
+
+  });
 }
+
+//starts program
+initialize(command);
